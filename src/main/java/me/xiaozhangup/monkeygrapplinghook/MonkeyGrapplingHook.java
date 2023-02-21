@@ -8,37 +8,26 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 
 public class MonkeyGrapplingHook extends JavaPlugin implements Listener {
 
     public static Plugin plugin;
     public static ListenerManager listenerManager = new ListenerManager();
-    public static NamespacedKey namespace;
 
     @Override
     public void onEnable() {
         plugin = this;
-        namespace = new NamespacedKey(plugin, "grappling");
 
         listenerManager.addListeners(
                 this
@@ -58,8 +47,6 @@ public class MonkeyGrapplingHook extends JavaPlugin implements Listener {
     public ItemStack getHook(int dur) {
         ItemStack itemStack = CustomStack.getInstance("grapplinghook").getItemStack();
         ItemMeta itemMeta = itemStack.getItemMeta();
-        PersistentDataContainer data = itemMeta.getPersistentDataContainer();
-        data.set(namespace, PersistentDataType.STRING, "true");
         if (itemMeta instanceof Damageable meta){
             meta.setDamage(dur);
             itemStack.setItemMeta(itemMeta);
@@ -72,19 +59,21 @@ public class MonkeyGrapplingHook extends JavaPlugin implements Listener {
         if (e.getState() == PlayerFishEvent.State.REEL_IN || e.getState() == PlayerFishEvent.State.IN_GROUND) {
             ItemStack itemInMainHand = e.getPlayer().getInventory().getItemInMainHand();
             ItemStack itemInOffHand = e.getPlayer().getInventory().getItemInOffHand();
-            hookerMethod(e, itemInMainHand);
-            hookerMethod(e, itemInOffHand);
-        }
-    }
-    private static void hookerMethod(PlayerFishEvent e, ItemStack item){
             Player player = e.getPlayer();
+//            try {
+                ItemStack item;
+                if (CustomStack.byItemStack(itemInMainHand).getNamespacedID()
+                        .equalsIgnoreCase("tbsurvival:grapplinghook")) {
+                    item = itemInMainHand;
+                }else if (CustomStack.byItemStack(itemInOffHand).getNamespacedID()
+                        .equalsIgnoreCase("tbsurvival:grapplinghook")){
+                    item = itemInOffHand;
+                }else {
+                    return;
+                }
 
-            ItemMeta meta = item.getItemMeta();
-            Damageable itemDamage = (Damageable) meta;
-            try {
-                PersistentDataContainer data = meta.getPersistentDataContainer();
-                String ret = data.get(namespace, PersistentDataType.STRING);
-                if (Objects.equals(ret, "true")) {
+                    ItemMeta meta = item.getItemMeta();
+                    Damageable itemDamage = (Damageable) meta;
                     Hooker.normalPush(player, e.getHook(), 1.2);
                     if (item.getType().getMaxDurability() < itemDamage.getDamage()) {
                         item.setType(Material.AIR);
@@ -99,8 +88,8 @@ public class MonkeyGrapplingHook extends JavaPlugin implements Listener {
                             sendTitle(player, "抓钩即将损坏", 230, 69, 83);
                         }
                     }
-                }
-            } catch (Exception ignored) {}
+//            } catch (Exception ignored) {}
+        }
     }
     private static void sendTitle(Player player, String 抓钩即将损坏, int r, int g, int b) {
         player.resetTitle();
