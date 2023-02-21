@@ -63,11 +63,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.oraxen</groupId>
-            <artifactId>oraxen</artifactId>
-            <version>1.152.0</version>
-            <scope>system</scope>
-            <systemPath>/home/xiaozhangup/IdeaProjects/MonkeyGrapplingHook/libs/oraxen-1.151.3.jar</systemPath>
+            <groupId>com.github.LoneDev6</groupId>
+            <artifactId>api-itemsadder</artifactId>
+            <version>3.2.5</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

@@ -1,6 +1,6 @@
 package me.xiaozhangup.monkeygrapplinghook;
 
-import io.th0rgal.oraxen.api.OraxenItems;
+import dev.lone.itemsadder.api.CustomStack;
 import me.xiaozhangup.monkeygrapplinghook.utils.command.Command;
 import me.xiaozhangup.monkeygrapplinghook.utils.manager.ListenerManager;
 import net.kyori.adventure.text.Component;
@@ -50,7 +50,7 @@ public class MonkeyGrapplingHook extends JavaPlugin implements Listener {
     }
 
     public ItemStack getHook(int dur) {
-        ItemStack itemStack = OraxenItems.getItemById("grapplinghook").build();
+        ItemStack itemStack = CustomStack.getInstance("grapplinghook").getItemStack();
         ItemMeta itemMeta = itemStack.getItemMeta();
         PersistentDataContainer data = itemMeta.getPersistentDataContainer();
         data.set(namespace, PersistentDataType.STRING, "true");
