@@ -2,7 +2,7 @@ name: MonkeyGrapplingHook
 version: ${project.version}
 api-version: 1.16
 depend:
-  - Oraxen
+  - ItemsAdder
 main: me.xiaozhangup.monkeygrapplinghook.MonkeyGrapplingHook
 
 commands:
