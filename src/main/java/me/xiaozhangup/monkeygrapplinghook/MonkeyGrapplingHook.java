@@ -7,14 +7,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -45,49 +42,53 @@ public class MonkeyGrapplingHook extends JavaPlugin implements Listener {
     }
 
     public ItemStack getHook(int dur) {
-        ItemStack itemStack = CustomStack.getInstance("grapplinghook").getItemStack();
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        if (itemMeta instanceof Damageable meta){
-            meta.setDamage(dur);
-            itemStack.setItemMeta(itemMeta);
-        }
-        return itemStack;
+        CustomStack customStack = CustomStack.getInstance("grapplinghook");
+            customStack.setDurability(dur);
+        return customStack.getItemStack();
     }
 
     @EventHandler
     public void on(PlayerFishEvent e) {
+        Player player = e.getPlayer();
+        ItemStack itemInMainHand = player.getEquipment().getItemInMainHand();
+        ItemStack itemInOffHand = player.getEquipment().getItemInOffHand();
         if (e.getState() == PlayerFishEvent.State.REEL_IN || e.getState() == PlayerFishEvent.State.IN_GROUND) {
-            ItemStack itemInMainHand = e.getPlayer().getInventory().getItemInMainHand();
-            ItemStack itemInOffHand = e.getPlayer().getInventory().getItemInOffHand();
-            Player player = e.getPlayer();
-//            try {
-                ItemStack item;
-                if (CustomStack.byItemStack(itemInMainHand).getNamespacedID()
-                        .equalsIgnoreCase("tbsurvival:grapplinghook")) {
-                    item = itemInMainHand;
-                }else if (CustomStack.byItemStack(itemInOffHand).getNamespacedID()
-                        .equalsIgnoreCase("tbsurvival:grapplinghook")){
-                    item = itemInOffHand;
-                }else {
-                    return;
-                }
-
-                    ItemMeta meta = item.getItemMeta();
-                    Damageable itemDamage = (Damageable) meta;
-                    Hooker.normalPush(player, e.getHook(), 1.2);
-                    if (item.getType().getMaxDurability() < itemDamage.getDamage()) {
-                        item.setType(Material.AIR);
-                        sendTitle(player, "抓钩已损坏", 210, 15, 57);
-                    } else {
-                        //item.setDurability((short) (item.getDurability() + 1));
-                        itemDamage.setDamage(itemDamage.getDamage() + 1);
-                        item.setItemMeta(itemDamage);
-                        if (item.getType().getMaxDurability() == item.getDurability()) {
-                            sendTitle(player, "抓钩已损坏", 210, 15, 57);
-                        } else if ((item.getType().getMaxDurability() - item.getDurability()) < 6) {
-                            sendTitle(player, "抓钩即将损坏", 230, 69, 83);
-                        }
+            //            try {
+            final ItemStack item;
+            if (CustomStack.byItemStack(itemInMainHand) != null &&
+                    CustomStack.byItemStack(itemInMainHand).getNamespacedID()
+                    .equals("tbsurvival:grapplinghook")) {
+                item = itemInMainHand;
+            } else if (CustomStack.byItemStack(itemInOffHand) != null &&
+                    CustomStack.byItemStack(itemInOffHand).getNamespacedID()
+                            .equals("tbsurvival:grapplinghook")){
+                item = itemInOffHand;
+            }else {
+                return;
+            }
+            CustomStack customStack = CustomStack.byItemStack(item);
+            if (customStack != null) {
+                if (customStack.getDurability() < 0) {
+                    if (CustomStack.byItemStack(itemInMainHand) != null &&
+                            CustomStack.byItemStack(itemInMainHand).getNamespacedID()
+                                    .equals("tbsurvival:grapplinghook")){
+                        player.getEquipment().setItemInMainHand(null);
                     }
+                    if (CustomStack.byItemStack(itemInOffHand) != null &&
+                            CustomStack.byItemStack(itemInOffHand).getNamespacedID()
+                                    .equals("tbsurvival:grapplinghook")){
+                            player.getEquipment().setItemInOffHand(null);
+                    }
+                } else {
+                    Hooker.normalPush(player, e.getHook(), 1.2);
+                    customStack.setDurability(customStack.getDurability() - 1);
+                    if (customStack.getDurability() == 0) {
+                        sendTitle(player, "抓钩已损坏", 210, 15, 57);
+                    } else if (customStack.getDurability() < 6) {
+                        sendTitle(player, "抓钩即将损坏", 230, 69, 83);
+                    }
+                }
+            }
 //            } catch (Exception ignored) {}
         }
     }
