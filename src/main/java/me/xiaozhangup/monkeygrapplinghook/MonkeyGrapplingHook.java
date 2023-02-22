@@ -7,6 +7,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.title.TitlePart;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -21,6 +22,7 @@ public class MonkeyGrapplingHook extends JavaPlugin implements Listener {
 
     public static Plugin plugin;
     public static ListenerManager listenerManager = new ListenerManager();
+
 
     @Override
     public void onEnable() {
@@ -43,7 +45,7 @@ public class MonkeyGrapplingHook extends JavaPlugin implements Listener {
 
     public ItemStack getHook(int dur) {
         CustomStack customStack = CustomStack.getInstance("grapplinghook");
-            customStack.setDurability(dur);
+        customStack.setDurability(dur);
         return customStack.getItemStack();
     }
 
@@ -53,48 +55,56 @@ public class MonkeyGrapplingHook extends JavaPlugin implements Listener {
         ItemStack itemInMainHand = player.getEquipment().getItemInMainHand();
         ItemStack itemInOffHand = player.getEquipment().getItemInOffHand();
         if (e.getState() == PlayerFishEvent.State.REEL_IN || e.getState() == PlayerFishEvent.State.IN_GROUND) {
-            //            try {
-            final ItemStack item;
-            if (CustomStack.byItemStack(itemInMainHand) != null &&
-                    CustomStack.byItemStack(itemInMainHand).getNamespacedID()
-                    .equals("tbsurvival:grapplinghook")) {
-                item = itemInMainHand;
-            } else if (CustomStack.byItemStack(itemInOffHand) != null &&
-                    CustomStack.byItemStack(itemInOffHand).getNamespacedID()
-                            .equals("tbsurvival:grapplinghook")){
-                item = itemInOffHand;
-            }else {
-                return;
-            }
-            CustomStack customStack = CustomStack.byItemStack(item);
-            if (customStack != null) {
-                if (customStack.getDurability() < 0) {
-                    if (CustomStack.byItemStack(itemInMainHand) != null &&
-                            CustomStack.byItemStack(itemInMainHand).getNamespacedID()
-                                    .equals("tbsurvival:grapplinghook")){
-                        player.getEquipment().setItemInMainHand(null);
-                    }
-                    if (CustomStack.byItemStack(itemInOffHand) != null &&
-                            CustomStack.byItemStack(itemInOffHand).getNamespacedID()
-                                    .equals("tbsurvival:grapplinghook")){
-                            player.getEquipment().setItemInOffHand(null);
-                    }
+            try {
+                final ItemStack item;
+                if (CustomStack.byItemStack(itemInMainHand) != null &&
+                        CustomStack.byItemStack(itemInMainHand).getNamespacedID()
+                                .equals("tbsurvival:grapplinghook")) {
+                    item = itemInMainHand;
+                } else if (CustomStack.byItemStack(itemInOffHand) != null &&
+                        CustomStack.byItemStack(itemInOffHand).getNamespacedID()
+                                .equals("tbsurvival:grapplinghook")) {
+                    item = itemInOffHand;
                 } else {
-                    Hooker.normalPush(player, e.getHook(), 1.2);
-                    customStack.setDurability(customStack.getDurability() - 1);
-                    if (customStack.getDurability() == 0) {
-                        sendTitle(player, "抓钩已损坏", 210, 15, 57);
-                    } else if (customStack.getDurability() < 6) {
-                        sendTitle(player, "抓钩即将损坏", 230, 69, 83);
+                    return;
+                }
+                CustomStack customStack = CustomStack.byItemStack(item);
+                if (customStack != null) {
+                    if (customStack.getDurability() <= 0) {
+                        if (CustomStack.byItemStack(itemInMainHand) != null &&
+                                CustomStack.byItemStack(itemInMainHand).getNamespacedID()
+                                        .equals("tbsurvival:grapplinghook")) {
+                            player.getEquipment().setItemInMainHand(null);
+                            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+                        }
+                        if (CustomStack.byItemStack(itemInOffHand) != null &&
+                                CustomStack.byItemStack(itemInOffHand).getNamespacedID()
+                                        .equals("tbsurvival:grapplinghook")) {
+                            player.getEquipment().setItemInOffHand(null);
+                            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+                        }
+                    } else {
+                        if (e.getState() != PlayerFishEvent.State.IN_GROUND){
+                            customStack.setDurability(customStack.getDurability() - 2);
+                            Hooker.normalPush(player, e.getHook(), 1.2);
+                        }else {
+                            Hooker.normalPush(player, e.getHook(), 1.8);
+                        }
+                        if (customStack.getDurability() == 0) {
+                            sendTitle(player, "抓钩已损坏", 210, 15, 57);
+                        } else if (customStack.getDurability() < 6) {
+                            sendTitle(player, "抓钩即将损坏", 230, 69, 83);
+                        }
                     }
                 }
+            } catch (Exception ignored) {
             }
-//            } catch (Exception ignored) {}
         }
     }
+
     private static void sendTitle(Player player, String 抓钩即将损坏, int r, int g, int b) {
         player.resetTitle();
-        player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofSeconds(0),Duration.ofSeconds(1),Duration.ofSeconds(0)));
+        player.sendTitlePart(TitlePart.TIMES, Title.Times.times(Duration.ofSeconds(0), Duration.ofSeconds(1), Duration.ofSeconds(0)));
         player.sendTitlePart(TitlePart.TITLE, Component.text(""));
         player.sendTitlePart(TitlePart.SUBTITLE, Component.text(抓钩即将损坏).color(TextColor.color(r, g, b)));
     }
